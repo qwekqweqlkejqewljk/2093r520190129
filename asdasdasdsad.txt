@@ -4,108 +4,160 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gartic.io Room Data</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            width: 80%;
-            margin: auto;
-            background-color: #fff;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .room {
-            margin-bottom: 20px;
-        }
-        .room h3 {
-            margin: 0;
-            padding: 10px 0;
-            border-bottom: 1px solid #ccc;
-        }
-        .players {
-            padding: 10px;
-        }
-        .player {
-            margin-bottom: 10px;
-        }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Gartic.io Room Data</h1>
-        <div id="rooms"></div>
-    </div>
-    <script>
-        function updateUsers() {
-            let roomsContainer = document.getElementById('rooms');
-            roomsContainer.innerHTML = '';
-            window.players.forEach(player => {
-                let discordID = null;
-                let discordMatch = player.foto.match(/https:\/\/cdn\.discordapp\.com\/avatars\/(\d+)\/.+\.png\?size=1024/);
-                if (discordMatch) {
-                    discordID = discordMatch[1];
-                }
-                let roomDiv = document.createElement('div');
-                roomDiv.className = 'room';
-                roomDiv.innerHTML = `
-                    <h3>Room: ${player.room}</h3>
-                    <div class="players">
-                        <div class="player">
-                            <p>Nick: ${player.nick}</p>
-                            <p>Foto: <img src="${player.foto}" alt="Avatar" width="50" height="50"></p>
-                            ${discordID ? `<button onclick="openDiscordProfile('${discordID}')">Discord Profile</button>` : ''}
-                        </div>
-                    </div>
-                `;
-                roomsContainer.appendChild(roomDiv);
-            });
-        }
+    <h1>Gartic.io Room Data</h1>
+    <div id="player-list"></div>
 
-        function openDiscordProfile(id) {
-            window.open(`https://discordlookup.com/user/${id}`, '_blank');
+    <script>
+        window.players = [];
+
+        function updateUsers() {
+            const playerList = document.getElementById("player-list");
+            playerList.innerHTML = "";
+            window.players.forEach(player => {
+                const playerDiv = document.createElement("div");
+                playerDiv.innerHTML = `<strong>Nick:</strong> ${player.nick} <br>
+                                       <strong>Points:</strong> ${player.points} <br>
+                                       <strong>Victories:</strong> ${player.victory} <br>
+                                       <strong>Room:</strong> <a href="${player.room}" target="_blank">${player.room}</a> <br>
+                                       <strong>Avatar:</strong> ${player.avatar} <br>
+                                       <strong>Foto:</strong> ${player.foto} <br>`;
+                playerList.appendChild(playerDiv);
+            });
         }
 
         function getData(roomCode) {
-            window.players = [];
-            let servers = ["server01", "server02", "server03", "server04", "server05", "server06"];
-            servers.forEach(server => {
-                let ws = new WebSocket(`wss://${server}.gartic.io/socket.io/?EIO=3&transport=websocket`);
-                ws.onopen = () => {
-                    ws.send(`42[12,{"v":20000,"platform":0,"sala":"${roomCode.slice(-4)}"}]`);
-                }
-                ws.onmessage = (msg) => {
-                    if (msg.data[4] == "5") {
-                        let data = JSON.parse(msg.data.slice(2));
-                        if (data[0] == 5) {
-                            console.log(data);
-                            data[5].forEach(user => {
-                                window.players.push({
-                                    "room": `https://gartic.io/${roomCode}`,
-                                    "nick": user.nick,
-                                    "foto": user.foto
-                                });
-                            });
-                            updateUsers();
-                            ws.close();
-                        }
+            //CHECK FOR SERVER01
+            let ws1 = new WebSocket("wss://server01.gartic.io/socket.io/?EIO=3&transport=websocket")
+            ws1.onopen = () => {
+                ws1.send('42[12,{"v":20000,"platform":0,"sala":"' + roomCode.slice(-4) + '"}]')
+            }
+            ws1.onmessage = (msg) => {
+                if (msg.data[4] == "5") {
+                    let data = JSON.parse(msg.data.slice(2))
+                    if (data[0] == 5) {
+                        console.log(data)
+                        data[5].forEach(user => {
+                            window.players.push({ "points": user.pontos, "victory": user.vitorias, "id": user.id, "avatar": user.avatar, "room": "https://gartic.io/" + roomCode, "nick": user.nick, "foto": user.foto })
+                        })
+                        updateUsers()
+                        ws1.close()
                     }
                 }
-            });
+            }
+            //CHECK FOR SERVER02
+            let ws2 = new WebSocket("wss://server02.gartic.io/socket.io/?EIO=3&transport=websocket")
+            ws2.onopen = () => {
+                ws2.send('42[12,{"v":20000,"platform":0,"sala":"' + roomCode.slice(-4) + '"}]')
+            }
+            ws2.onmessage = (msg) => {
+                if (msg.data[4] == "5") {
+                    let data = JSON.parse(msg.data.slice(2))
+                    if (data[0] == 5) {
+                        console.log(data)
+                        data[5].forEach(user => {
+                            window.players.push({ "points": user.pontos, "victory": user.vitorias, "id": user.id, "avatar": user.avatar, "room": "https://gartic.io/" + roomCode, "nick": user.nick, "foto": user.foto })
+                        })
+                        updateUsers()
+                        ws2.close()
+                    }
+                }
+            }
+            //CHECK FOR SERVER03
+            let ws3 = new WebSocket("wss://server03.gartic.io/socket.io/?EIO=3&transport=websocket")
+            ws3.onopen = () => {
+                ws3.send('42[12,{"v":20000,"platform":0,"sala":"' + roomCode.slice(-4) + '"}]')
+            }
+            ws3.onmessage = (msg) => {
+                if (msg.data[4] == "5") {
+                    let data = JSON.parse(msg.data.slice(2))
+                    if (data[0] == 5) {
+                        console.log(data)
+                        data[5].forEach(user => {
+                            window.players.push({ "points": user.pontos, "victory": user.vitorias, "id": user.id, "avatar": user.avatar, "room": "https://gartic.io/" + roomCode, "nick": user.nick, "foto": user.foto })
+                        })
+                        updateUsers()
+                        ws3.close()
+                    }
+                }
+            }
+            //CHECK FOR SERVER04
+            let ws4 = new WebSocket("wss://server04.gartic.io/socket.io/?EIO=3&transport=websocket")
+            ws4.onopen = () => {
+                ws4.send('42[12,{"v":20000,"platform":0,"sala":"' + roomCode.slice(-4) + '"}]')
+            }
+            ws4.onmessage = (msg) => {
+                if (msg.data[4] == "5") {
+                    let data = JSON.parse(msg.data.slice(2))
+                    if (data[0] == 5) {
+                        console.log(data)
+                        data[5].forEach(user => {
+                            window.players.push({ "points": user.pontos, "victory": user.vitorias, "id": user.id, "avatar": user.avatar, "room": "https://gartic.io/" + roomCode, "nick": user.nick, "foto": user.foto })
+                        })
+                        updateUsers()
+                        ws4.close()
+                    }
+                }
+            }
+            //CHECK FOR SERVER05
+            let ws5 = new WebSocket("wss://server05.gartic.io/socket.io/?EIO=3&transport=websocket")
+            ws5.onopen = () => {
+                ws5.send('42[12,{"v":20000,"platform":0,"sala":"' + roomCode.slice(-4) + '"}]')
+            }
+            ws5.onmessage = (msg) => {
+                if (msg.data[4] == "5") {
+                    let data = JSON.parse(msg.data.slice(2))
+                    if (data[0] == 5) {
+                        console.log(data)
+                        data[5].forEach(user => {
+                            window.players.push({ "points": user.pontos, "victory": user.vitorias, "id": user.id, "avatar": user.avatar, "room": "https://gartic.io/" + roomCode, "nick": user.nick, "foto": user.foto })
+                        })
+                        updateUsers()
+                        ws5.close()
+                    }
+                }
+            }
+            //CHECK FOR SERVER06
+            let ws6 = new WebSocket("wss://server06.gartic.io/socket.io/?EIO=3&transport=websocket")
+            ws6.onopen = () => {
+                ws6.send('42[12,{"v":20000,"platform":0,"sala":"' + roomCode.slice(-4) + '"}]')
+            }
+            ws6.onmessage = (msg) => {
+                if (msg.data[4] == "5") {
+                    let data = JSON.parse(msg.data.slice(2))
+                    if (data[0] == 5) {
+                        console.log(data)
+                        data[5].forEach(user => {
+                            window.players.push({ "points": user.pontos, "victory": user.vitorias, "id": user.id, "avatar": user.avatar, "room": "https://gartic.io/" + roomCode, "nick": user.nick, "foto": user.foto })
+                        })
+                        updateUsers()
+                        ws6.close()
+                    }
+                }
+            }
         }
 
-        fetch("https://gartic.io/req/list?search=&language[]=" + window.lang)
-            .then(x => x.json())
-            .then(x => {
-                x.forEach(room => {
-                    if (room.quant > 0) {
-                        getData(room.code);
-                    }
+        function fetchData() {
+            fetch("https://gartic.io/req/list?search=&language[]=" + window.lang)
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(room => {
+                        if (room.quant > 0) {
+                            getData(room.code);
+                        }
+                    });
                 });
-            });
+        }
+
+        // Define the language parameter (example: 'en' for English)
+        window.lang = 'en';
+
+        // Fetch data every 3 seconds
+        setInterval(fetchData, 3000);
+
+        // Initial fetch
+        fetchData();
     </script>
 </body>
 </html>
