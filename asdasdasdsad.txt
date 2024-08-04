@@ -139,7 +139,7 @@
         }
 
         function fetchData() {
-            fetch("https://gartic.io/req/list?search=&language[]=" + window.lang)
+            fetch("https://gartic.io/req/list?search=&language[]=8")
                 .then(response => response.json())
                 .then(data => {
                     data.forEach(room => {
